@@ -126,3 +126,27 @@ export async function pollVideoStatus(id: number, intervalMs = 5000, timeoutMs =
   }
   throw new Error("Polling timed out");
 }
+
+// Contact Form
+export interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
+export interface ContactFormResponse {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string>;
+}
+
+export async function submitContactForm(data: ContactFormData): Promise<ContactFormResponse> {
+  const res = await fetch(`${BASE_URL}/api/contact`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  
+  const response: ContactFormResponse = await res.json();
+  return response;
+}

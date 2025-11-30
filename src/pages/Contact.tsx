@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { submitContactForm } from "@/lib/api";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -30,17 +31,62 @@ const Contact = () => {
       return;
     }
 
+    // Client-side validation matching backend constraints
+    if (formData.name.length < 2 || formData.name.length > 100) {
+      toast({
+        title: "Invalid name",
+        description: "Name must be between 2 and 100 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.message.length < 10 || formData.message.length > 1000) {
+      toast({
+        title: "Invalid message",
+        description: "Message must be between 10 and 1000 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await submitContactForm(formData);
+      
+      if (response.success) {
+        toast({
+          title: "Message sent!",
+          description: response.message || "We'll get back to you as soon as possible",
+        });
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        // Handle validation errors from backend
+        if (response.errors) {
+          const errorMessages = Object.values(response.errors).join(", ");
+          toast({
+            title: "Validation error",
+            description: errorMessages,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: response.message || "Failed to send message",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
       toast({
-        title: "Message sent!",
-        description: "We'll get back to you as soon as possible",
+        title: "Error",
+        description: "Failed to send message. Please try again later.",
+        variant: "destructive",
       });
-      setFormData({ name: "", email: "", message: "" });
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (
