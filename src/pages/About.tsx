@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Target, Users, Zap, Globe } from "lucide-react";
+import { Target, Users, Zap, Globe, Github, Linkedin, Twitter, Mail } from "lucide-react";
 
 const values = [
   {
@@ -55,18 +55,75 @@ const About = () => {
           className="mb-16"
         >
           <Card className="p-8 md:p-12 bg-card/50 backdrop-blur-sm border-border/50">
-            <h2 className="text-3xl font-bold mb-6">Our Story</h2>
-            <div className="space-y-4 text-muted-foreground">
-              <p>
-                We transcode your video into multiple quality levels and HLS streams, optimized for modern devices and networks. Our platform was built by developers who were frustrated with expensive, complex video processing pipelines.
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+              {/* Photo and Socials */}
+              <div className="flex flex-col items-center lg:items-start">
+                <div className="relative group">
+                  <div className="w-48 h-48 rounded-2xl overflow-hidden border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
+                    <img 
+                      src="/profile.jpg" 
+                      alt="Aditya" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-2xl opacity-0 group-hover:opacity-50 transition-opacity -z-10" />
+                </div>
+                <h3 className="text-xl font-semibold mt-4">Kumar Aditya</h3>
+                <p className="text-sm text-muted-foreground mb-4">Creator & Developer</p>
                 
-              </p>
-              <p>
-                Today, fluxmedia powers video delivery for thousands of creators and businesses worldwide. From small startups to large enterprises, our customers trust us to handle their most critical video workflows.
-              </p>
-              <p>
-                Our cloud-native architecture ensures scalability and reliability, while our developer-first design makes integration a breeze. Whether you're building a video platform, streaming service, or content management system, fluxmedia has you covered.
-              </p>
+                {/* Social Links */}
+                <div className="flex gap-3">
+                  <a 
+                    href="https://github.com/adityainhub" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-colors"
+                  >
+                    <Github className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://linkedin.com/in/aditya1502" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-colors"
+                  >
+                    <Linkedin className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="https://twitter.com/k07aditya" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-colors"
+                  >
+                    <Twitter className="h-5 w-5" />
+                  </a>
+                  <a 
+                    href="mailto:k.aditya9599@gmail.com"
+                    className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-colors"
+                  >
+                    <Mail className="h-5 w-5" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Story Content */}
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold mb-6">My Story</h2>
+                <div className="space-y-4 text-muted-foreground">
+                  <p>
+                    Hey there! 👋 I'm a college student passionate about cloud computing, distributed systems, and video streaming technologies. <span className="text-foreground font-medium">fluxmedia</span> is my attempt to dive deep into this fascinating domain and learn by building something real.
+                  </p>
+                  <p>
+                    This project started as a way to understand how video transcoding pipelines work — from uploading raw videos to processing them into multiple quality levels and HLS streams for adaptive playback. Every line of code here is a learning experience, and I'm excited to share this journey with you.
+                  </p>
+                  <p>
+                    <span className="text-foreground font-medium">A quick heads up:</span> Some features mentioned on this site are still in development and haven't rolled out yet. The impressive stats? They're aspirational — something to work towards! I've just started, and I'm building this step by step.
+                  </p>
+                  <p>
+                    I'd love for you to try out fluxmedia and share your feedback. Whether it's a bug report, feature suggestion, or just a hello — your input helps me learn and improve. Let's build something awesome together! 🚀
+                  </p>
+                </div>
+              </div>
             </div>
           </Card>
         </motion.div>
