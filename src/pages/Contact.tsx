@@ -137,26 +137,7 @@ const Contact = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="space-y-6"
-          >
-            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Mail className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Email Us</h3>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    For general inquiries
-                  </p>
-                  <a
-                    href="mailto:hello@fluxmedia.com"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    hello@fluxmedia.com
-                  </a>
-                </div>
-              </div>
-            </Card>
+          >   
 
             <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
               <div className="flex items-start gap-4">
@@ -172,7 +153,7 @@ const Contact = () => {
                     href="mailto:support@fluxmedia.com"
                     className="text-sm text-primary hover:underline"
                   >
-                    support@fluxmedia.com
+                    support@fluxmedia.in
                   </a>
                 </div>
               </div>
