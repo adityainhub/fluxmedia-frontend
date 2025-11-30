@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Video, ArrowRight } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
@@ -44,22 +44,16 @@ export const Navbar = () => {
           <Link to="/" className="flex items-center gap-3 group">
             <motion.div 
               className="relative"
-              whileHover={{ rotate: 180 }}
-              transition={{ duration: 0.6, ease: "easeInOut" }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              <div className="relative z-10">
-                <Video className="h-7 w-7 text-primary transition-all" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="Fluxmedia" 
+                className="h-8 w-auto object-contain"
+              />
               <motion.div 
-                className="absolute inset-0 blur-2xl bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-150"
-                animate={{
-                  scale: [1.5, 1.7, 1.5],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                className="absolute inset-0 blur-2xl bg-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-150"
               />
             </motion.div>
             <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text group-hover:from-primary group-hover:to-primary/70 transition-all duration-300">
