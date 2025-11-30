@@ -114,13 +114,13 @@ const About = () => {
                     Hey there! 👋 I'm a college student passionate about cloud computing, distributed systems, and video streaming technologies. <span className="text-foreground font-medium">fluxmedia</span> is my attempt to dive deep into this fascinating domain and learn by building something real.
                   </p>
                   <p>
-                    This project started as a way to understand how video transcoding pipelines work — from uploading raw videos to processing them into multiple quality levels and HLS streams for adaptive playback. Every line of code here is a learning experience, and I'm excited to share this journey with you.
+                    This project started as a way to understand how video transcoding pipelines work, from uploading raw videos to processing them into multiple quality levels and HLS streams for adaptive playback. Every line of code here is a learning experience, and I'm excited to share this journey with you.
                   </p>
                   <p>
-                    <span className="text-foreground font-medium">A quick heads up:</span> Some features mentioned on this site are still in development and haven't rolled out yet. The impressive stats? They're aspirational — something to work towards! I've just started, and I'm building this step by step.
+                    <span className="text-foreground font-medium">A quick heads up:</span> Some features mentioned on this site are still in development and haven't rolled out yet. The impressive stats? They're aspirational, something to work towards! I've just started, and I'm building this step by step.
                   </p>
                   <p>
-                    I'd love for you to try out fluxmedia and share your feedback. Whether it's a bug report, feature suggestion, or just a hello — your input helps me learn and improve. Let's build something awesome together! 🚀
+                    I'd love for you to try out fluxmedia and share your feedback. Whether it's a bug report, feature suggestion, or just a hello, your input helps me learn and improve. Let's build something awesome together!
                   </p>
                 </div>
               </div>
