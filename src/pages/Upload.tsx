@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload as UploadIcon, FileVideo, Download, Clock, CheckCircle2, XCircle, Sparkles, Zap, Play } from "lucide-react";
+import { Upload as UploadIcon, FileVideo, Clock, CheckCircle2, XCircle, Sparkles, Zap, Play, X, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { requestPresignedUpload, putFileToPresignedUrl, getVideo, getVideoDownloadLinks, DownloadVariant } from "@/lib/api";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 type FrontendStatus = "UPLOADING" | "UPLOADED" | "QUEUED" | "PROCESSING" | "PROCESSED" | "FAILED";
 
@@ -17,6 +18,7 @@ interface Job {
   progress?: number;
   variants?: DownloadVariant[];
   variantsState?: "loading" | "none" | "ready" | "error";
+  masterUrl?: string;
 }
 
 const Upload = () => {
@@ -25,6 +27,7 @@ const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [activePlayer, setActivePlayer] = useState<{ jobId: string; masterUrl: string; fileName: string } | null>(null);
   const pollingRefs = useRef<Record<string, number>>({});
   const { toast } = useToast();
 
@@ -129,7 +132,20 @@ const Upload = () => {
         setJobs(prev => prev.map(j => j.id === videoId ? { ...j, variantsState: "none" } : j));
         return;
       }
-      setJobs(prev => prev.map(j => j.id === videoId ? { ...j, variantsState: "ready", variants: resp.variants ?? undefined } : j));
+      // Find the master playlist URL (usually has "master" in quality or is the HLS variant)
+      const masterVariant = resp.variants.find(v => 
+        v.quality.toLowerCase().includes("master") || 
+        v.contentType.includes("mpegurl") ||
+        v.url.includes("master.m3u8")
+      );
+      const masterUrl = masterVariant?.url;
+      
+      setJobs(prev => prev.map(j => j.id === videoId ? { 
+        ...j, 
+        variantsState: "ready", 
+        variants: resp.variants ?? undefined,
+        masterUrl 
+      } : j));
     } catch (e: any) {
       console.error(e);
       setJobs(prev => prev.map(j => j.id === videoId ? { ...j, variantsState: "error" } : j));
@@ -490,43 +506,45 @@ const Upload = () => {
                               <div className="mt-3">
                                 {job.variantsState === undefined && (
                                   <Button size="sm" variant="outline" onClick={() => fetchVariants(job.id)} className="hover:bg-primary/10">
-                                    <Download className="h-4 w-4 mr-1" /> Load Downloads
+                                    <Play className="h-4 w-4 mr-1" /> Load Video
                                   </Button>
                                 )}
                                 {job.variantsState === "loading" && (
-                                  <p className="text-xs text-muted-foreground">Loading variants...</p>
+                                  <p className="text-xs text-muted-foreground">Loading video...</p>
                                 )}
                                 {job.variantsState === "none" && (
                                   <div className="flex items-center gap-2">
                                     <p className="text-xs text-muted-foreground">No variants yet</p>
-                                    <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>Refresh</Button>
+                                    <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>
+                                      <RefreshCw className="h-3 w-3" />
+                                    </Button>
                                   </div>
                                 )}
                                 {job.variantsState === "error" && (
                                   <div className="flex items-center gap-2">
-                                    <p className="text-xs text-destructive">Failed to load variants</p>
+                                    <p className="text-xs text-destructive">Failed to load</p>
                                     <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>Retry</Button>
                                   </div>
                                 )}
-                                {job.variantsState === "ready" && job.variants && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {job.variants.map(v => (
-                                      <motion.a
-                                        key={v.quality}
-                                        href={v.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex"
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                      >
-                                        <Button size="sm" variant="outline" className="hover:bg-primary/10 hover:border-primary">
-                                          <Download className="h-4 w-4 mr-1" /> {v.quality}
-                                        </Button>
-                                      </motion.a>
-                                    ))}
+                                {job.variantsState === "ready" && job.masterUrl && (
+                                  <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                  >
+                                    <Button 
+                                      size="sm" 
+                                      className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                                      onClick={() => setActivePlayer({ jobId: job.id, masterUrl: job.masterUrl!, fileName: job.fileName })}
+                                    >
+                                      <Play className="h-4 w-4 mr-1 fill-current" /> Watch Video
+                                    </Button>
+                                  </motion.div>
+                                )}
+                                {job.variantsState === "ready" && !job.masterUrl && (
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-xs text-muted-foreground">No playable stream found</p>
                                     <Button size="sm" variant="ghost" onClick={() => handleManualRefresh(job.id)} className="hover:bg-primary/10">
-                                      ↻
+                                      <RefreshCw className="h-3 w-3" />
                                     </Button>
                                   </div>
                                 )}
@@ -560,6 +578,46 @@ const Upload = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Video Player Modal */}
+      <AnimatePresence>
+        {activePlayer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setActivePlayer(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="w-full max-w-4xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white truncate pr-4">
+                  {activePlayer.fileName}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 flex-shrink-0"
+                  onClick={() => setActivePlayer(null)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <VideoPlayer 
+                masterUrl={activePlayer.masterUrl} 
+                title={activePlayer.fileName}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
