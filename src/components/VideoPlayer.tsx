@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Hls from "hls.js";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Play, Settings, Wifi, WifiOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Play, Settings, Wifi, WifiOff, Maximize, Minimize } from "lucide-react";
 
 interface Level {
   height: number;
@@ -15,9 +16,11 @@ interface Level {
 interface VideoPlayerProps {
   masterUrl: string;
   title?: string;
+  poster?: string;
 }
 
-export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
+export const VideoPlayer = ({ masterUrl, title, poster }: VideoPlayerProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [levels, setLevels] = useState<Level[]>([]);
@@ -25,6 +28,30 @@ export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!containerRef.current) return;
+    
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (err) {
+      console.error("Fullscreen error:", err);
+    }
+  }, []);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -104,9 +131,9 @@ export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
   };
 
   return (
-    <Card className="overflow-hidden bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
+    <Card ref={containerRef} className={`overflow-hidden bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl ${isFullscreen ? 'rounded-none border-none' : ''}`}>
       {/* Video Container */}
-      <div className="relative bg-black aspect-video">
+      <div className={`relative bg-black ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'aspect-video'}`}>
         {/* Loading Overlay */}
         {isLoading && (
           <motion.div 
@@ -147,6 +174,7 @@ export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           playsInline
+          poster={poster}
         />
 
         {/* Quality Badge Overlay */}
@@ -168,12 +196,12 @@ export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
       </div>
 
       {/* Controls Section */}
-      <div className="p-4 bg-gradient-to-b from-card to-card/80">
+      <div className={`p-4 bg-gradient-to-b from-card to-card/80 ${isFullscreen ? 'bg-black/90' : ''}`}>
         <div className="flex items-center justify-between gap-4">
           {/* Title */}
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className="font-semibold truncate text-foreground">{title}</h3>
+              <h3 className={`font-semibold truncate ${isFullscreen ? 'text-white' : 'text-foreground'}`}>{title}</h3>
             )}
             <div className="flex items-center gap-2 mt-1">
               {isPlaying ? (
@@ -189,38 +217,54 @@ export const VideoPlayer = ({ masterUrl, title }: VideoPlayerProps) => {
             </div>
           </div>
 
-          {/* Quality Selector */}
-          {levels.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-muted-foreground" />
-              <Select 
-                value={currentLevel.toString()} 
-                onValueChange={changeQuality}
-              >
-                <SelectTrigger className="w-[140px] bg-secondary/50 border-border/50">
-                  <SelectValue placeholder="Quality" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="-1">
-                    <div className="flex items-center gap-2">
-                      <span>Auto</span>
-                      <Badge variant="outline" className="text-xs">Recommended</Badge>
-                    </div>
-                  </SelectItem>
-                  {levels.map((level, index) => (
-                    <SelectItem key={index} value={index.toString()}>
-                      <div className="flex items-center justify-between gap-4">
-                        <span>{level.height}p</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatBitrate(level.bitrate)}
-                        </span>
+          {/* Quality Selector & Fullscreen */}
+          <div className="flex items-center gap-3">
+            {levels.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Settings className="h-4 w-4 text-muted-foreground" />
+                <Select 
+                  value={currentLevel.toString()} 
+                  onValueChange={changeQuality}
+                >
+                  <SelectTrigger className="w-[140px] bg-secondary/50 border-border/50">
+                    <SelectValue placeholder="Quality" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="-1">
+                      <div className="flex items-center gap-2">
+                        <span>Auto</span>
+                        <Badge variant="outline" className="text-xs">Recommended</Badge>
                       </div>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+                    {levels.map((level, index) => (
+                      <SelectItem key={index} value={index.toString()}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span>{level.height}p</span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatBitrate(level.bitrate)}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {/* Fullscreen Button */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleFullscreen}
+              className="bg-secondary/50 border-border/50 hover:bg-primary/20 hover:border-primary/50"
+            >
+              {isFullscreen ? (
+                <Minimize className="h-4 w-4" />
+              ) : (
+                <Maximize className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Available Qualities */}

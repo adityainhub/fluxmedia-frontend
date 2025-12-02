@@ -19,6 +19,7 @@ interface Job {
   variants?: DownloadVariant[];
   variantsState?: "loading" | "none" | "ready" | "error";
   masterUrl?: string;
+  thumbnailUrl?: string;
 }
 
 const Upload = () => {
@@ -27,7 +28,7 @@ const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [activePlayer, setActivePlayer] = useState<{ jobId: string; masterUrl: string; fileName: string } | null>(null);
+  const [activePlayer, setActivePlayer] = useState<{ jobId: string; masterUrl: string; fileName: string; thumbnailUrl?: string } | null>(null);
   const pollingRefs = useRef<Record<string, number>>({});
   const { toast } = useToast();
 
@@ -140,11 +141,20 @@ const Upload = () => {
       );
       const masterUrl = masterVariant?.url;
       
+      // Find the thumbnail URL
+      const thumbnailVariant = resp.variants.find(v => 
+        v.quality.toLowerCase().includes("thumbnail") || 
+        v.contentType.includes("image") ||
+        v.url.includes("thumb")
+      );
+      const thumbnailUrl = thumbnailVariant?.url;
+      
       setJobs(prev => prev.map(j => j.id === videoId ? { 
         ...j, 
         variantsState: "ready", 
         variants: resp.variants ?? undefined,
-        masterUrl 
+        masterUrl,
+        thumbnailUrl
       } : j));
     } catch (e: any) {
       console.error(e);
@@ -393,231 +403,245 @@ const Upload = () => {
             </Card>
           </motion.div>
 
-          {/* Job History */}
+          {/* Right Pane - Job History or Video Player */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
           >
-            <Card className="p-8 bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
-              <div className="flex items-center gap-2 mb-6">
-                <Clock className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-semibold">Processing Queue</h2>
-              </div>
-              
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                <AnimatePresence mode="popLayout">
-                  {jobs.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-12"
-                    >
-                      <FileVideo className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
-                      <p className="text-muted-foreground">No videos yet</p>
-                      <p className="text-sm text-muted-foreground/70">Upload a video to get started</p>
-                    </motion.div>
-                  ) : (
-                    jobs.map((job, index) => (
-                      <motion.div
-                        key={job.id}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="p-5 bg-gradient-to-br from-secondary/50 to-secondary/30 rounded-xl border border-border/50 hover:border-primary/30 transition-all group"
+            <AnimatePresence mode="wait">
+              {activePlayer ? (
+                <motion.div
+                  key="player"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
+                    <div className="p-4 border-b border-border/50 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Play className="h-5 w-5 text-primary fill-primary" />
+                        <h2 className="text-lg font-semibold truncate">{activePlayer.fileName}</h2>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActivePlayer(null)}
+                        className="hover:bg-destructive/10 hover:text-destructive"
                       >
-                        <div className="flex items-start gap-4">
+                        <X className="h-4 w-4 mr-1" />
+                        Close
+                      </Button>
+                    </div>
+                    <VideoPlayer 
+                      masterUrl={activePlayer.masterUrl} 
+                      title={activePlayer.fileName}
+                      poster={activePlayer.thumbnailUrl}
+                    />
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="queue"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="p-8 bg-card/80 backdrop-blur-xl border-border/50 shadow-2xl">
+                    <div className="flex items-center gap-2 mb-6">
+                      <Clock className="h-6 w-6 text-primary" />
+                      <h2 className="text-2xl font-semibold">Processing Queue</h2>
+                    </div>
+                    
+                    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                      <AnimatePresence mode="popLayout">
+                        {jobs.length === 0 ? (
                           <motion.div
-                            className="flex-shrink-0 mt-1 p-2 rounded-lg bg-background/50"
-                            animate={{
-                              rotate: (job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") ? 360 : 0
-                            }}
-                            transition={{ duration: 2, repeat: (job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") ? Infinity : 0, ease: "linear" }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="text-center py-12"
                           >
-                            {job.status === "PROCESSED" && (
-                              <CheckCircle2 className="h-5 w-5 text-green-500" />
-                            )}
-                            {(job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") && (
-                              <Clock className="h-5 w-5 text-primary" />
-                            )}
-                            {job.status === "FAILED" && (
-                              <XCircle className="h-5 w-5 text-destructive" />
-                            )}
+                            <FileVideo className="h-16 w-16 mx-auto mb-4 text-muted-foreground/50" />
+                            <p className="text-muted-foreground">No videos yet</p>
+                            <p className="text-sm text-muted-foreground/70">Upload a video to get started</p>
                           </motion.div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate group-hover:text-primary transition-colors">{job.fileName}</p>
-                            <p className="text-xs text-muted-foreground mt-0.5">{job.timestamp}</p>
-                            
-                            {/* Status messages with animated dots */}
-                            {job.status === "UPLOADING" && (
-                              <motion.p 
-                                className="text-xs text-primary mt-2 flex items-center gap-1"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                              >
-                                Uploading to storage
-                                <motion.span
-                                  animate={{ opacity: [0, 1, 0] }}
-                                  transition={{ duration: 1.5, repeat: Infinity }}
-                                >...</motion.span>
-                              </motion.p>
-                            )}
-                            {job.status === "UPLOADED" && (
-                              <p className="text-xs text-muted-foreground mt-2">✓ Uploaded. Awaiting queue.</p>
-                            )}
-                            {job.status === "QUEUED" && (
-                              <motion.p 
-                                className="text-xs text-primary mt-2 flex items-center gap-1"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                              >
-                                Queued for processing
-                                <motion.span
-                                  animate={{ opacity: [0, 1, 0] }}
-                                  transition={{ duration: 1.5, repeat: Infinity }}
-                                >...</motion.span>
-                              </motion.p>
-                            )}
-                            {job.status === "PROCESSING" && (
-                              <motion.p 
-                                className="text-xs text-primary mt-2 flex items-center gap-1"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                              >
-                                <Zap className="h-3 w-3" />
-                                Transcoding in progress
-                                <motion.span
-                                  animate={{ opacity: [0, 1, 0] }}
-                                  transition={{ duration: 1.5, repeat: Infinity }}
-                                >...</motion.span>
-                              </motion.p>
-                            )}
-                            {job.status === "FAILED" && (
-                              <p className="text-xs text-destructive mt-2">✗ Processing failed.</p>
-                            )}
-                            {job.status === "PROCESSED" && (
-                              <p className="text-xs text-green-500 mt-2">✓ Ready for download</p>
-                            )}
-
-                            {/* Variants section */}
-                            {job.status === "PROCESSED" && (
-                              <div className="mt-3">
-                                {job.variantsState === undefined && (
-                                  <Button size="sm" variant="outline" onClick={() => fetchVariants(job.id)} className="hover:bg-primary/10">
-                                    <Play className="h-4 w-4 mr-1" /> Load Video
-                                  </Button>
-                                )}
-                                {job.variantsState === "loading" && (
-                                  <p className="text-xs text-muted-foreground">Loading video...</p>
-                                )}
-                                {job.variantsState === "none" && (
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-xs text-muted-foreground">No variants yet</p>
-                                    <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>
-                                      <RefreshCw className="h-3 w-3" />
-                                    </Button>
+                        ) : (
+                          jobs.map((job, index) => (
+                            <motion.div
+                              key={job.id}
+                              initial={{ opacity: 0, x: 20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -20 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="p-5 bg-gradient-to-br from-secondary/50 to-secondary/30 rounded-xl border border-border/50 hover:border-primary/30 transition-all group"
+                            >
+                              <div className="flex items-start gap-4">
+                                {/* Thumbnail or Status Icon */}
+                                {job.status === "PROCESSED" && job.thumbnailUrl ? (
+                                  <div className="flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden bg-black/50 border border-border/50">
+                                    <img 
+                                      src={job.thumbnailUrl} 
+                                      alt={job.fileName}
+                                      className="w-full h-full object-cover"
+                                    />
                                   </div>
-                                )}
-                                {job.variantsState === "error" && (
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-xs text-destructive">Failed to load</p>
-                                    <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>Retry</Button>
-                                  </div>
-                                )}
-                                {job.variantsState === "ready" && job.masterUrl && (
+                                ) : (
                                   <motion.div
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    className="flex-shrink-0 mt-1 p-2 rounded-lg bg-background/50"
+                                    animate={{
+                                      rotate: (job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") ? 360 : 0
+                                    }}
+                                    transition={{ duration: 2, repeat: (job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") ? Infinity : 0, ease: "linear" }}
                                   >
-                                    <Button 
-                                      size="sm" 
-                                      className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
-                                      onClick={() => setActivePlayer({ jobId: job.id, masterUrl: job.masterUrl!, fileName: job.fileName })}
-                                    >
-                                      <Play className="h-4 w-4 mr-1 fill-current" /> Watch Video
-                                    </Button>
+                                    {job.status === "PROCESSED" && (
+                                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                    )}
+                                    {(job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") && (
+                                      <Clock className="h-5 w-5 text-primary" />
+                                    )}
+                                    {job.status === "FAILED" && (
+                                      <XCircle className="h-5 w-5 text-destructive" />
+                                    )}
                                   </motion.div>
                                 )}
-                                {job.variantsState === "ready" && !job.masterUrl && (
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-xs text-muted-foreground">No playable stream found</p>
-                                    <Button size="sm" variant="ghost" onClick={() => handleManualRefresh(job.id)} className="hover:bg-primary/10">
-                                      <RefreshCw className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold truncate group-hover:text-primary transition-colors">{job.fileName}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{job.timestamp}</p>
+                                  
+                                  {/* Status messages with animated dots */}
+                                  {job.status === "UPLOADING" && (
+                                    <motion.p 
+                                      className="text-xs text-primary mt-2 flex items-center gap-1"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                    >
+                                      Uploading to storage
+                                      <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                      >...</motion.span>
+                                    </motion.p>
+                                  )}
+                                  {job.status === "UPLOADED" && (
+                                    <p className="text-xs text-muted-foreground mt-2">✓ Uploaded. Awaiting queue.</p>
+                                  )}
+                                  {job.status === "QUEUED" && (
+                                    <motion.p 
+                                      className="text-xs text-primary mt-2 flex items-center gap-1"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                    >
+                                      Queued for processing
+                                      <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                      >...</motion.span>
+                                    </motion.p>
+                                  )}
+                                  {job.status === "PROCESSING" && (
+                                    <motion.p 
+                                      className="text-xs text-primary mt-2 flex items-center gap-1"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                    >
+                                      <Zap className="h-3 w-3" />
+                                      Transcoding in progress
+                                      <motion.span
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 1.5, repeat: Infinity }}
+                                      >...</motion.span>
+                                    </motion.p>
+                                  )}
+                                  {job.status === "FAILED" && (
+                                    <p className="text-xs text-destructive mt-2">✗ Processing failed.</p>
+                                  )}
+                                  {job.status === "PROCESSED" && (
+                                    <p className="text-xs text-green-500 mt-2">✓ Ready to watch</p>
+                                  )}
 
-              <style>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                  width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                  background: hsl(var(--secondary));
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                  background: hsl(var(--primary) / 0.5);
-                  border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                  background: hsl(var(--primary));
-                }
-              `}</style>
-            </Card>
+                                  {/* Variants section */}
+                                  {job.status === "PROCESSED" && (
+                                    <div className="mt-3">
+                                      {job.variantsState === undefined && (
+                                        <Button size="sm" variant="outline" onClick={() => fetchVariants(job.id)} className="hover:bg-primary/10">
+                                          <Play className="h-4 w-4 mr-1" /> Load Video
+                                        </Button>
+                                      )}
+                                      {job.variantsState === "loading" && (
+                                        <p className="text-xs text-muted-foreground">Loading video...</p>
+                                      )}
+                                      {job.variantsState === "none" && (
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-xs text-muted-foreground">No variants yet</p>
+                                          <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>
+                                            <RefreshCw className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {job.variantsState === "error" && (
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-xs text-destructive">Failed to load</p>
+                                          <Button size="sm" variant="outline" onClick={() => handleManualRefresh(job.id)}>Retry</Button>
+                                        </div>
+                                      )}
+                                      {job.variantsState === "ready" && job.masterUrl && (
+                                        <motion.div
+                                          whileHover={{ scale: 1.02 }}
+                                          whileTap={{ scale: 0.98 }}
+                                        >
+                                          <Button 
+                                            size="sm" 
+                                            className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                                            onClick={() => setActivePlayer({ jobId: job.id, masterUrl: job.masterUrl!, fileName: job.fileName, thumbnailUrl: job.thumbnailUrl })}
+                                          >
+                                            <Play className="h-4 w-4 mr-1 fill-current" /> Watch Video
+                                          </Button>
+                                        </motion.div>
+                                      )}
+                                      {job.variantsState === "ready" && !job.masterUrl && (
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-xs text-muted-foreground">No playable stream found</p>
+                                          <Button size="sm" variant="ghost" onClick={() => handleManualRefresh(job.id)} className="hover:bg-primary/10">
+                                            <RefreshCw className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    <style>{`
+                      .custom-scrollbar::-webkit-scrollbar {
+                        width: 6px;
+                      }
+                      .custom-scrollbar::-webkit-scrollbar-track {
+                        background: hsl(var(--secondary));
+                        border-radius: 10px;
+                      }
+                      .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: hsl(var(--primary) / 0.5);
+                        border-radius: 10px;
+                      }
+                      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: hsl(var(--primary));
+                      }
+                    `}</style>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </div>
-
-      {/* Video Player Modal */}
-      <AnimatePresence>
-        {activePlayer && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setActivePlayer(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="w-full max-w-4xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white truncate pr-4">
-                  {activePlayer.fileName}
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-white hover:bg-white/20 flex-shrink-0"
-                  onClick={() => setActivePlayer(null)}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <VideoPlayer 
-                masterUrl={activePlayer.masterUrl} 
-                title={activePlayer.fileName}
-              />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
