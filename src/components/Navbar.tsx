@@ -100,6 +100,13 @@ export const Navbar = () => {
 
           {/* Enhanced CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-secondary/30 mr-1">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-success animate-ping opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
+              <span className="text-xs font-mono text-muted-foreground">All systems operational</span>
+            </div>
             <Link to="/login">
               <Button 
                 variant="ghost" 

@@ -51,7 +51,8 @@ const services = [
 
 const Services = () => {
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pt-24 pb-16 relative">
+      <div className="absolute inset-0 -z-10 bg-grid [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,black_15%,transparent_70%)]" />
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div

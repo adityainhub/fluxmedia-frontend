@@ -2,55 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
+
+Palette: dark cloud-infrastructure console (near-black navy + indigo primary +
+emerald "live/success" accent), matching the real pipeline status states
+(QUEUED -> PROCESSING -> PROCESSED). Modeled after developer-tool SaaS
+products (API portals, IDEs, cloud consoles) rather than generic AI gradients.
 */
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 224 71% 4%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 8% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 240 8% 8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 263 70% 65%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 15%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 222 33% 13%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 222 33% 12%;
+    --muted-foreground: 217 15% 63%;
 
-    --accent: 263 70% 65%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 222 47% 6%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 222 47% 6%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 6%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5% 20%;
-    --input: 240 5% 20%;
-    --ring: 263 70% 65%;
+    --border: 222 24% 17%;
+    --input: 222 24% 17%;
+    --ring: 239 84% 67%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    --glow-primary: 263 70% 65%;
-    --glow-secondary: 280 70% 55%;
-    
-    --gradient-hero: linear-gradient(135deg, hsl(263 70% 65% / 0.3), hsl(280 70% 55% / 0.2));
-    
-    --sidebar-background: 240 8% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 263 70% 65%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 5% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 5% 20%;
-    --sidebar-ring: 263 70% 65%;
+    --glow-primary: 239 84% 67%;
+    --glow-secondary: 142 71% 45%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(239 84% 67% / 0.16), hsl(142 71% 45% / 0.08));
+    --grid-line: 222 24% 15%;
+    --code-bg: 222 47% 5%;
+
+    --sidebar-background: 222 47% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 239 84% 67%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 33% 13%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 222 24% 17%;
+    --sidebar-ring: 239 84% 67%;
   }
 }
 
@@ -60,20 +73,61 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
   }
-  
+
   html {
     scroll-behavior: smooth;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
+  ::selection {
+    @apply bg-primary/30 text-foreground;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  /* Consistent, visible focus rings across the app (WCAG 2.4.7) */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  /* Subtle cloud-console backdrop grid, used instead of decorative color blobs */
+  .bg-grid {
+    background-image: linear-gradient(hsl(var(--grid-line)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-line)) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-primary via-indigo-400 to-emerald-400 bg-clip-text text-transparent;
+  }
+
+  .card-surface {
+    @apply bg-card/60 backdrop-blur-xl border border-border/60;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--secondary));
+    border-radius: 10px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.4);
+    border-radius: 10px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
   }
 }
