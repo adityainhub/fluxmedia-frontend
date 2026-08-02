@@ -5,65 +5,70 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
 All colors MUST be HSL.
 
-Palette: dark cloud-infrastructure console (near-black navy + indigo primary +
-emerald "live/success" accent), matching the real pipeline status states
-(QUEUED -> PROCESSING -> PROCESSED). Modeled after developer-tool SaaS
-products (API portals, IDEs, cloud consoles) rather than generic AI gradients.
+Palette: cinematic red-black console (near-black neutral + cinema-red primary),
+with a separate green "success/live" token reserved for pipeline status states
+(QUEUED -> PROCESSING -> PROCESSED) so status meaning never collides with the
+red brand/destructive family. Destructive uses a vermillion offset from primary
+so the two reds stay visually distinguishable, not just by label.
 */
 
 @layer base {
   :root {
-    --background: 224 71% 4%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 100%;
+    /* L=60 is deliberate, not decorative: at the deeper L=48 red this replaced,
+       white button text and red-as-text-on-black couldn't both clear WCAG AA
+       4.5:1 at once (see contrast audit). Pairing this lighter red with dark
+       (not white) foreground text satisfies both cases with margin. */
+    --primary: 357 91% 60%;
+    --primary-foreground: 0 0% 8%;
 
-    --secondary: 222 33% 13%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 222 33% 12%;
-    --muted-foreground: 217 15% 63%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 64%;
 
-    --accent: 142 71% 45%;
-    --accent-foreground: 222 47% 6%;
+    --accent: 357 91% 60%;
+    --accent-foreground: 0 0% 8%;
 
     --success: 142 71% 45%;
-    --success-foreground: 222 47% 6%;
+    --success-foreground: 0 0% 6%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 6%;
+    --warning-foreground: 0 0% 6%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 14 89% 50%;
+    --destructive-foreground: 0 0% 8%;
 
-    --border: 222 24% 17%;
-    --input: 222 24% 17%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 20%;
+    --input: 0 0% 24%;
+    --ring: 357 91% 60%;
 
     --radius: 0.625rem;
 
-    --glow-primary: 239 84% 67%;
-    --glow-secondary: 142 71% 45%;
+    --glow-primary: 357 91% 60%;
+    --glow-secondary: 14 89% 55%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(239 84% 67% / 0.16), hsl(142 71% 45% / 0.08));
-    --grid-line: 222 24% 15%;
-    --code-bg: 222 47% 5%;
+    --gradient-hero: linear-gradient(135deg, hsl(357 91% 60% / 0.18), hsl(0 0% 100% / 0.04));
+    --grid-line: 0 0% 15%;
+    --code-bg: 0 0% 4%;
 
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 239 84% 67%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 33% 13%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 222 24% 17%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 357 91% 60%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 357 91% 60%;
   }
 }
 
@@ -109,7 +114,7 @@ products (API portals, IDEs, cloud consoles) rather than generic AI gradients.
   }
 
   .text-gradient-brand {
-    @apply bg-gradient-to-r from-primary via-indigo-400 to-emerald-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary via-red-500 to-orange-400 bg-clip-text text-transparent;
   }
 
   .card-surface {
