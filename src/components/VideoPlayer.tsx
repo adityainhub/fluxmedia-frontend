@@ -205,7 +205,7 @@ export const VideoPlayer = ({ masterUrl, title, poster }: VideoPlayerProps) => {
             )}
             <div className="flex items-center gap-2 mt-1">
               {isPlaying ? (
-                <Badge variant="default" className="bg-green-500/20 text-green-500 border-green-500/30">
+                <Badge variant="default" className="bg-success/20 text-success border-success/30">
                   <Play className="h-3 w-3 mr-1 fill-current" />
                   Playing
                 </Badge>

@@ -200,10 +200,10 @@ const Upload = () => {
   return (
     <div className="min-h-screen pt-24 pb-16 relative overflow-hidden">
       {/* Animated background gradients */}
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+      <div className="absolute inset-0 -z-10 bg-grid [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black_20%,transparent_75%)]">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/15 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
         <div className="absolute top-0 -right-4 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-success/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       <style>{`
@@ -237,14 +237,14 @@ const Upload = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-6"
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">AI-Powered Transcoding</span>
+            <span className="text-sm font-medium text-primary">Cloud-Native Transcoding</span>
           </motion.div>
           
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Upload & Transform
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 text-gradient-brand">
+            Upload &amp; Transform
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Upload your video and watch as we transcode it into multiple formats with lightning speed
+            Drop in a video and watch it move through the real pipeline — queued, transcoded, and packaged into HLS.
           </p>
         </motion.div>
 
@@ -334,7 +334,7 @@ const Upload = () => {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="mt-6 p-5 bg-gradient-to-r from-primary/10 to-purple-500/10 rounded-xl border border-primary/20"
+                    className="mt-6 p-5 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20"
                   >
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-primary/20 rounded-lg">
@@ -388,7 +388,7 @@ const Upload = () => {
               <Button
                 onClick={handleProcess}
                 disabled={!selectedFile || isUploading}
-                className="w-full mt-6 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg hover:shadow-xl transition-all"
+                className="w-full mt-6 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-lg hover:shadow-xl transition-all"
                 size="lg"
               >
                 <motion.div
@@ -496,7 +496,7 @@ const Upload = () => {
                                     transition={{ duration: 2, repeat: (job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") ? Infinity : 0, ease: "linear" }}
                                   >
                                     {job.status === "PROCESSED" && (
-                                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                      <CheckCircle2 className="h-5 w-5 text-success" />
                                     )}
                                     {(job.status === "PROCESSING" || job.status === "QUEUED" || job.status === "UPLOADED" || job.status === "UPLOADING") && (
                                       <Clock className="h-5 w-5 text-primary" />
@@ -559,7 +559,7 @@ const Upload = () => {
                                     <p className="text-xs text-destructive mt-2">✗ Processing failed.</p>
                                   )}
                                   {job.status === "PROCESSED" && (
-                                    <p className="text-xs text-green-500 mt-2">✓ Ready to watch</p>
+                                    <p className="text-xs text-success mt-2">✓ Ready to watch</p>
                                   )}
 
                                   {/* Variants section */}
@@ -594,7 +594,7 @@ const Upload = () => {
                                         >
                                           <Button 
                                             size="sm" 
-                                            className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                                            className="bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90"
                                             onClick={() => setActivePlayer({ jobId: job.id, masterUrl: job.masterUrl!, fileName: job.fileName, thumbnailUrl: job.thumbnailUrl })}
                                           >
                                             <Play className="h-4 w-4 mr-1 fill-current" /> Watch Video

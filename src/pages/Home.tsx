@@ -1,23 +1,21 @@
 import { Hero } from "@/components/Hero";
-import { HowItWorks } from "@/components/HowItWorks";
+import { StackBadges } from "@/components/StackBadges";
+import { Architecture } from "@/components/Architecture";
+import { CodeSample } from "@/components/CodeSample";
 import { Benefits } from "@/components/Benefits";
-import { Footer } from "@/components/Footer";
-import { Navbar } from "@/components/Navbar";
+import { FAQ } from "@/components/FAQ";
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-300">
-      <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <Hero />
-        <section className="my-12">
-          <HowItWorks />
-        </section>
-        <section className="my-12">
-          <Benefits />
-        </section>
-      </main>
-      <Footer />
+    <div className="min-h-screen bg-background">
+      <Hero />
+      <StackBadges />
+      <div id="architecture">
+        <Architecture />
+      </div>
+      <CodeSample />
+      <Benefits />
+      <FAQ />
     </div>
   );
 };
