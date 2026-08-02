@@ -203,7 +203,7 @@ const Upload = () => {
       <div className="absolute inset-0 -z-10 bg-grid [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,black_20%,transparent_75%)]">
         <div className="absolute top-0 -left-4 w-72 h-72 bg-primary/15 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
         <div className="absolute top-0 -right-4 w-72 h-72 bg-primary/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-success/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-orange-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       <style>{`
@@ -388,7 +388,7 @@ const Upload = () => {
               <Button
                 onClick={handleProcess}
                 disabled={!selectedFile || isUploading}
-                className="w-full mt-6 bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white shadow-lg hover:shadow-xl transition-all"
+                className="w-full mt-6 bg-gradient-to-r from-primary to-red-800 hover:from-primary/90 hover:to-red-800/90 text-white shadow-lg hover:shadow-xl transition-all"
                 size="lg"
               >
                 <motion.div
@@ -594,7 +594,7 @@ const Upload = () => {
                                         >
                                           <Button 
                                             size="sm" 
-                                            className="bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90"
+                                            className="bg-gradient-to-r from-primary to-red-800 hover:from-primary/90 hover:to-red-800/90"
                                             onClick={() => setActivePlayer({ jobId: job.id, masterUrl: job.masterUrl!, fileName: job.fileName, thumbnailUrl: job.thumbnailUrl })}
                                           >
                                             <Play className="h-4 w-4 mr-1 fill-current" /> Watch Video

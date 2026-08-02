@@ -1,8 +1,8 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Layers3, Cpu, ShieldCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const highlights = [
   { icon: Layers3, text: "5 adaptive HLS renditions" },
@@ -17,9 +17,22 @@ const stats = [
 ];
 
 export const Hero = () => {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 120]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduceMotion = useReducedMotion();
+
+  // Track the hero's own scroll progress, not absolute pixels: an absolute
+  // range fades the content out while the full-height section is still on
+  // screen, leaving a blank viewport. 0 = hero top at viewport top,
+  // 1 = hero fully scrolled past.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  // Fade across the window where the content is actually leaving the viewport:
+  // early enough that the fade is visible, late enough that it never empties
+  // the hero while it still fills the screen.
+  const opacity = useTransform(scrollYProgress, [0, 0.1, 0.8], [1, 1, 0]);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -34,7 +47,10 @@ export const Hero = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28">
+    <section
+      ref={sectionRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-28"
+    >
       {/* Cloud-console backdrop: grid + two restrained glows, not decorative confetti */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-background" />
@@ -50,11 +66,14 @@ export const Hero = () => {
           style={{ x: -mousePosition.x * 0.6, y: -mousePosition.y * 0.6 }}
           animate={{ opacity: [0.15, 0.28, 0.15] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-1/4 right-1/4 w-[24rem] h-[24rem] bg-success/15 rounded-full blur-[140px]"
+          className="absolute bottom-1/4 right-1/4 w-[24rem] h-[24rem] bg-orange-600/15 rounded-full blur-[140px]"
         />
       </div>
 
-      <motion.div className="container mx-auto px-4" style={{ y, opacity }}>
+      <motion.div
+        className="container mx-auto px-4"
+        style={reduceMotion ? undefined : { y, opacity }}
+      >
         <div className="max-w-5xl mx-auto text-center space-y-8">
           {/* Status badge */}
           <motion.div
