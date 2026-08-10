@@ -366,6 +366,7 @@ const CARGO = {
   message: { icon: Layers, title: "{ videoId, s3Key }", sub: "SQS message" },
   invoke: { icon: Zap, title: "RunTask", sub: "task definition" },
   callback: { icon: Server, title: "HMAC callback", sub: "X-ECS-Signature" },
+  uploadUrlRequest: { icon: Monitor, title: "POST /upload-url", sub: "request · JSON" },
   request: { icon: Monitor, title: "GET /download", sub: "poll · JSON" },
   del: { icon: Trash2, title: "DELETE raw", sub: "reclaim storage" },
 } satisfies Record<string, { icon: LucideIcon; title: string; sub: string }>;
@@ -376,7 +377,7 @@ const CARGO = {
  * ecs_transcoder/index.js → VideoCallbackController → VideoDownloadController.
  */
 const steps: Step[] = [
-  { from: "client", to: "api", label: "POST /api/video/upload-url", status: "UPLOADED", dwell: 2000, cargo: CARGO.request },
+  { from: "client", to: "api", label: "POST /api/video/upload-url", status: "UPLOADED", dwell: 2000, cargo: CARGO.uploadUrlRequest },
   { from: "client", to: "s3", label: "PUT raw bytes · presigned", dwell: 1900 },
   { from: "s3", to: "events", label: "ObjectCreated", dwell: 2000, cargo: CARGO.event },
   { from: "events", to: "api", label: "POST /videos/uploaded", status: "QUEUED", dwell: 2000, cargo: CARGO.event },
