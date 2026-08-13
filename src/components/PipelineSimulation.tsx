@@ -20,13 +20,17 @@ import {
   Film,
   Loader2,
   CheckCircle2,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const TRAVEL_MS = 900;
-const TRANSCODE_STEP = 7;
+/** From this hop on, the media on the wire is the HLS ladder, not the source file. */
+const TRANSCODE_STEP = 9;
+/** Index of the final hop, after which the client holds a playable stream. */
+const FINAL_STEP = 13;
 
 const CANVAS = { w: 1200, h: 470 };
 const CARD_W = 178;
@@ -349,18 +353,47 @@ interface Step {
   label: string;
   status?: string;
   dwell: number;
+  /**
+   * What is physically on the wire. Defaults to the video payload; set for
+   * hops that carry a request or command rather than media, so the packet
+   * never claims to be a 412 MB file when it's a DELETE.
+   */
+  cargo?: { icon: LucideIcon; title: string; sub: string };
 }
 
+const CARGO = {
+  event: { icon: RadioTower, title: "ObjectCreated", sub: "event · 2 KB" },
+  message: { icon: Layers, title: "{ videoId, s3Key }", sub: "SQS message" },
+  invoke: { icon: Zap, title: "RunTask", sub: "task definition" },
+  callback: { icon: Server, title: "HMAC callback", sub: "X-ECS-Signature" },
+  uploadUrlRequest: { icon: Monitor, title: "POST /upload-url", sub: "request · JSON" },
+  request: { icon: Monitor, title: "GET /download", sub: "poll · JSON" },
+  del: { icon: Trash2, title: "DELETE raw", sub: "reclaim storage" },
+} satisfies Record<string, { icon: LucideIcon; title: string; sub: string }>;
+
+/**
+ * The full call graph, traced from the source:
+ * videoUploadController → S3/EventBridge → SQS → lambda-launcher/index.js →
+ * ecs_transcoder/index.js → VideoCallbackController → VideoDownloadController.
+ */
 const steps: Step[] = [
-  { from: "client", to: "api", label: "POST /api/video/upload-url", status: "UPLOADED", dwell: 2100 },
-  { from: "client", to: "s3", label: "PUT raw bytes · presigned", dwell: 2000 },
-  { from: "s3", to: "events", label: "ObjectCreated", dwell: 2200 },
-  { from: "events", to: "api", label: "POST /videos/uploaded", status: "QUEUED", dwell: 2100 },
-  { from: "api", to: "sqs", label: "publish { videoId, s3Key }", dwell: 3200 },
-  { from: "sqs", to: "lambda", label: "ReceiveMessage · batch", dwell: 3000 },
-  { from: "lambda", to: "fargate", label: "RunTask · ARM64", status: "PROCESSING", dwell: 2900 },
-  { from: "fargate", to: "api", label: "HMAC callback /completed", status: "PROCESSED", dwell: 2200 },
-  { from: "api", to: "client", label: "signed master.m3u8", dwell: 2300 },
+  { from: "client", to: "api", label: "POST /api/video/upload-url", status: "UPLOADED", dwell: 2000, cargo: CARGO.uploadUrlRequest },
+  { from: "client", to: "s3", label: "PUT raw bytes · presigned", dwell: 1900 },
+  { from: "s3", to: "events", label: "ObjectCreated", dwell: 2000, cargo: CARGO.event },
+  { from: "events", to: "api", label: "POST /videos/uploaded", status: "QUEUED", dwell: 2000, cargo: CARGO.event },
+  { from: "api", to: "sqs", label: "publish { videoId, s3Key }", dwell: 3000, cargo: CARGO.message },
+  { from: "sqs", to: "lambda", label: "invoke · batch of messages", dwell: 2900, cargo: CARGO.message },
+  { from: "lambda", to: "fargate", label: "RunTask · ARM64 · 4/5 slots", dwell: 2600, cargo: CARGO.invoke },
+  // The worker signals PROCESSING before it does anything else (index.js:16),
+  // then pulls the raw object down — RunTask only carried the S3 key.
+  { from: "fargate", to: "api", label: "POST /{id}/processing · HMAC", status: "PROCESSING", dwell: 2000, cargo: CARGO.callback },
+  { from: "s3", to: "fargate", label: "GET raw object → /tmp", dwell: 2200 },
+  { from: "fargate", to: "s3", label: "PUT hls/ segments + master.m3u8", dwell: 3000 },
+  { from: "fargate", to: "api", label: "POST /{id}/completed · variants", status: "PROCESSED", dwell: 2200, cargo: CARGO.callback },
+  // Raw upload is deleted once variants are safely persisted (VideoService:97).
+  { from: "api", to: "s3", label: "DELETE raw object · reclaim", dwell: 2000, cargo: CARGO.del },
+  { from: "client", to: "api", label: "GET /{id}/download", dwell: 2000, cargo: CARGO.request },
+  { from: "api", to: "client", label: "presigned master.m3u8", dwell: 2300 },
 ];
 
 /* -------------------------------- card --------------------------------- */
@@ -492,6 +525,8 @@ export const PipelineSimulation = () => {
   };
 
   const transcoded = idx >= TRANSCODE_STEP;
+  const cargo = step.cargo;
+  const CargoIcon = cargo?.icon ?? Film;
 
   /** A hop only "counts" once the payload has actually landed. */
   const arrived = phase === "process";
@@ -503,7 +538,11 @@ export const PipelineSimulation = () => {
   const litWires = new Set(done.map((s) => wireKey(s.from, s.to)));
 
   const bodyStatus = (svc: Service) =>
-    svc.id === "api" ? currentStatus : svc.id === "client" && idx >= 8 ? "done" : undefined;
+    svc.id === "api"
+      ? currentStatus
+      : svc.id === "client" && idx >= FINAL_STEP && arrived
+        ? "done"
+        : undefined;
 
   return (
     <div ref={rootRef}>
@@ -653,16 +692,16 @@ export const PipelineSimulation = () => {
             }}
             aria-hidden="true"
           >
-            <div className="flex w-[116px] items-center gap-1.5 rounded-md border border-primary/60 bg-card px-2 py-1.5 shadow-[0_8px_26px_-4px_hsl(var(--primary)/0.9)]">
+            <div className="flex w-[132px] items-center gap-1.5 rounded-md border border-primary/60 bg-card px-2 py-1.5 shadow-[0_8px_26px_-4px_hsl(var(--primary)/0.9)]">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/20">
-                <Film className="h-3 w-3 text-primary" strokeWidth={2.5} />
+                <CargoIcon className="h-3 w-3 text-primary" strokeWidth={2.5} />
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-mono text-[10px] font-medium">
-                  {transcoded ? "master.m3u8" : "keynote.mp4"}
+                  {cargo ? cargo.title : transcoded ? "master.m3u8" : "keynote.mp4"}
                 </span>
                 <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                  {transcoded ? "5 renditions" : "412 MB"}
+                  {cargo ? cargo.sub : transcoded ? "5 renditions" : "412 MB"}
                 </span>
               </span>
             </div>
