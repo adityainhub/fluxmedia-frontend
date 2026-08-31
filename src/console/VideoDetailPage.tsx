@@ -20,6 +20,7 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { deleteVideo, getVideo, getVideoDownloadLinks } from "@/lib/api";
 import { formatBytes, formatDateTime, formatDuration } from "@/lib/format";
 import { StatusBadge, isActiveStatus } from "./StatusBadge";
+import { ShareCard } from "./ShareCard";
 
 export default function VideoDetailPage() {
   const { id } = useParams();
@@ -169,6 +170,8 @@ export default function VideoDetailPage() {
         </div>
 
         <div className="space-y-4">
+          {video.status === "PROCESSED" && <ShareCard video={video} />}
+
           <Card className="p-5 bg-card/60 border-border/50">
             <h3 className="font-semibold mb-4">Details</h3>
             <dl className="space-y-3 text-sm">

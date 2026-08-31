@@ -14,6 +14,8 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Watch from "./pages/Watch";
+import Embed from "./pages/Embed";
 import NotFound from "./pages/NotFound";
 import ConsoleLayout from "./console/ConsoleLayout";
 import DashboardPage from "./console/DashboardPage";
@@ -54,6 +56,10 @@ const App = () => (
 
             {/* Legacy public upload URL now lives in the console */}
             <Route path="/upload" element={<Navigate to="/console/upload" replace />} />
+
+            {/* Public playback — no auth, standalone chrome */}
+            <Route path="/watch/:token" element={<Watch />} />
+            <Route path="/embed/:token" element={<Embed />} />
 
             <Route
               path="/console"

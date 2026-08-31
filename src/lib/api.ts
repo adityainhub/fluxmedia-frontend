@@ -110,8 +110,18 @@ export interface Video {
   sizeBytes?: number | null;
   durationSeconds?: number | null;
   sourceResolution?: string | null;
+  shareToken?: string | null;
   uploadedAt?: string | null;
   processedAt?: string | null;
+}
+
+export interface PublicWatchInfo {
+  title: string | null;
+  durationSeconds: number | null;
+  sourceResolution: string | null;
+  masterUrl: string;
+  thumbnailUrl: string | null;
+  urlExpiresInSeconds: number;
 }
 
 export interface AuthUser {
@@ -295,6 +305,30 @@ export async function getVideoDownloadLinks(id: number): Promise<VideoDownloadRe
   }
   if (!res.ok) throw new ApiError(res.status, await readError(res, `Failed to get download links (${res.status})`));
   return await res.json();
+}
+
+// ---------------------------------------------------------------------------
+// Sharing
+// ---------------------------------------------------------------------------
+
+export async function enableShare(id: number): Promise<string> {
+  const res = await authFetch(`/api/video/${id}/share`, { method: "POST" });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to enable sharing"));
+  const data: { shareToken: string } = await res.json();
+  return data.shareToken;
+}
+
+export async function disableShare(id: number): Promise<void> {
+  const res = await authFetch(`/api/video/${id}/share`, { method: "DELETE" });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to disable sharing"));
+}
+
+/** Public, unauthenticated — powers the /watch and /embed pages. */
+export async function getPublicWatch(token: string): Promise<PublicWatchInfo | null> {
+  const res = await fetch(`${BASE_URL}/api/public/watch/${encodeURIComponent(token)}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to load video"));
+  return res.json();
 }
 
 // ---------------------------------------------------------------------------

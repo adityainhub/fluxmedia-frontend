@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Clapperboard,
+  Globe,
+  Link2,
   MoreHorizontal,
   Play,
   Search,
@@ -179,8 +181,13 @@ export default function VideosPage() {
                     onClick={() => navigate(`/console/videos/${video.id}`)}
                   >
                     <TableCell className="max-w-[280px]">
-                      <p className="font-medium truncate">
-                        {video.fileName || video.originalFileName || `Video ${video.id}`}
+                      <p className="font-medium truncate flex items-center gap-1.5">
+                        <span className="truncate">
+                          {video.fileName || video.originalFileName || `Video ${video.id}`}
+                        </span>
+                        {video.shareToken && (
+                          <Globe className="h-3.5 w-3.5 text-success shrink-0" aria-label="Shared publicly" />
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground md:hidden">
                         {formatBytes(video.sizeBytes)}
@@ -210,6 +217,22 @@ export default function VideosPage() {
                             <Play className="h-4 w-4 mr-2" />
                             {video.status === "PROCESSED" ? "Watch" : "View details"}
                           </DropdownMenuItem>
+                          {video.shareToken && (
+                            <DropdownMenuItem
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(
+                                    `${window.location.origin}/watch/${video.shareToken}`,
+                                  );
+                                  toast({ title: "Share link copied" });
+                                } catch {
+                                  toast({ title: "Copy failed", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              <Link2 className="h-4 w-4 mr-2" /> Copy share link
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
                             onClick={() => setPendingDelete(video)}
