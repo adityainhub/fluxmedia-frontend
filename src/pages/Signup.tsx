@@ -1,7 +1,7 @@
 import { useState, FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, Video } from "lucide-react";
+import { CheckCircle2, Loader2, Video } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,26 +9,40 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
-const Login = () => {
+const perks = [
+  "10 free videos every month",
+  "Full HLS adaptive streaming pipeline",
+  "No credit card required",
+];
+
+const Signup = () => {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from ?? "/console";
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+    if (password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Use at least 8 characters",
+        variant: "destructive",
+      });
+      return;
+    }
     setSubmitting(true);
     try {
-      await login(email.trim(), password);
-      navigate(from, { replace: true });
+      await register(email.trim(), password, fullName.trim());
+      toast({ title: "Welcome to fluxmedia!", description: "Your account is ready." });
+      navigate("/console", { replace: true });
     } catch (err) {
       toast({
-        title: "Sign in failed",
+        title: "Sign up failed",
         description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       });
@@ -47,7 +61,7 @@ const Login = () => {
         className="w-full max-w-md"
       >
         <Card className="p-8 bg-card/50 backdrop-blur-sm border-border/50">
-          <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="flex items-center justify-center gap-2 mb-6">
             <div className="relative">
               <Video className="h-8 w-8 text-primary" />
               <div className="absolute inset-0 blur-xl bg-primary/30" />
@@ -55,14 +69,32 @@ const Login = () => {
             <span className="text-2xl font-bold">fluxmedia</span>
           </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold mb-2">Welcome back</h1>
-            <p className="text-muted-foreground">
-              Sign in to your console to manage uploads, streams, and usage
-            </p>
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold mb-2">Create your account</h1>
+            <p className="text-muted-foreground">Start streaming in minutes</p>
           </div>
 
+          <ul className="mb-6 space-y-2">
+            {perks.map((perk) => (
+              <li key={perk} className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
+                {perk}
+              </li>
+            ))}
+          </ul>
+
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full name</Label>
+              <Input
+                id="fullName"
+                autoComplete="name"
+                required
+                placeholder="Ada Lovelace"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -80,9 +112,10 @@ const Login = () => {
               <Input
                 id="password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 required
-                placeholder="••••••••"
+                minLength={8}
+                placeholder="At least 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -91,28 +124,19 @@ const Login = () => {
             <Button type="submit" size="lg" className="w-full" disabled={submitting}>
               {submitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Signing in…
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating account…
                 </>
               ) : (
-                "Sign in"
+                "Create free account"
               )}
             </Button>
           </form>
-
-          <div className="text-center mt-6">
-            <p className="text-sm text-muted-foreground">
-              By continuing, you agree to our{" "}
-              <a href="#" className="text-primary hover:underline">Terms of Service</a>{" "}
-              and{" "}
-              <a href="#" className="text-primary hover:underline">Privacy Policy</a>
-            </p>
-          </div>
         </Card>
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link to="/signup" className="text-primary hover:underline font-medium">
-            Sign up free
+          Already have an account?{" "}
+          <Link to="/login" className="text-primary hover:underline font-medium">
+            Sign in
           </Link>
         </p>
       </motion.div>
@@ -120,4 +144,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;

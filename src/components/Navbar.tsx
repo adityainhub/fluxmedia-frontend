@@ -5,10 +5,12 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +23,7 @@ export const Navbar = () => {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Services", path: "/services" },
+    { name: "Pricing", path: "/pricing" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];
@@ -107,15 +110,17 @@ export const Navbar = () => {
               </span>
               <span className="text-xs font-mono text-muted-foreground">All systems operational</span>
             </div>
-            <Link to="/login">
-              <Button 
-                variant="ghost" 
-                className="text-foreground/70 hover:text-foreground hover:bg-secondary/50 font-medium tracking-wide transition-all"
-              >
-                Sign in
-              </Button>
-            </Link>
-            <Link to="/upload">
+            {!user && (
+              <Link to="/login">
+                <Button
+                  variant="ghost"
+                  className="text-foreground/70 hover:text-foreground hover:bg-secondary/50 font-medium tracking-wide transition-all"
+                >
+                  Sign in
+                </Button>
+              </Link>
+            )}
+            <Link to={user ? "/console" : "/signup"}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -133,7 +138,7 @@ export const Navbar = () => {
                     }}
                   />
                   <span className="relative flex items-center gap-2">
-                    Get Started
+                    {user ? "Open Console" : "Get Started"}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </Button>
@@ -243,17 +248,19 @@ export const Navbar = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Link to="/login" onClick={() => setIsOpen(false)}>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-center h-12 text-base font-medium hover:bg-secondary/50"
-                  >
-                    Sign in
-                  </Button>
-                </Link>
-                <Link to="/upload" onClick={() => setIsOpen(false)}>
+                {!user && (
+                  <Link to="/login" onClick={() => setIsOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-center h-12 text-base font-medium hover:bg-secondary/50"
+                    >
+                      Sign in
+                    </Button>
+                  </Link>
+                )}
+                <Link to={user ? "/console" : "/signup"} onClick={() => setIsOpen(false)}>
                   <Button className="w-full h-12 bg-primary hover:bg-primary/90 text-base font-medium shadow-lg shadow-primary/20 group">
-                    Get Started
+                    {user ? "Open Console" : "Get Started"}
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
