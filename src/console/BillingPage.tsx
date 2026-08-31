@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { Check, CreditCard, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { changePlan, getUsage } from "@/lib/api";
+import {
+  cancelSubscription,
+  createCheckout,
+  getBillingStatus,
+  getUsage,
+  verifyPayment,
+} from "@/lib/api";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import { formatBytes } from "@/lib/format";
 import { PLANS, PlanInfo } from "@/lib/plans";
 import { useAuth } from "@/context/AuthContext";
@@ -26,29 +33,90 @@ export default function BillingPage() {
   const { user, refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [pendingPlan, setPendingPlan] = useState<PlanInfo | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
   const usageQuery = useQuery({ queryKey: ["usage"], queryFn: getUsage });
+  const billingQuery = useQuery({ queryKey: ["billing"], queryFn: getBillingStatus });
   const usage = usageQuery.data;
+  const billing = billingQuery.data;
 
-  const planMutation = useMutation({
-    mutationFn: (plan: string) => changePlan(plan),
-    onSuccess: async (updatedUser) => {
-      await refreshUser();
-      queryClient.invalidateQueries({ queryKey: ["usage"] });
+  const afterPlanChange = async () => {
+    await refreshUser();
+    queryClient.invalidateQueries({ queryKey: ["usage"] });
+    queryClient.invalidateQueries({ queryKey: ["billing"] });
+  };
+
+  const verifyMutation = useMutation({
+    mutationFn: verifyPayment,
+    onSuccess: async (status) => {
+      await afterPlanChange();
       toast({
-        title: "Plan updated",
-        description: `You're now on the ${updatedUser.plan.charAt(0)}${updatedUser.plan.slice(1).toLowerCase()} plan.`,
+        title: "Payment successful",
+        description: `You're now on the ${status.plan.charAt(0)}${status.plan.slice(1).toLowerCase()} plan.`,
       });
     },
     onError: (err) => {
       toast({
-        title: "Plan change failed",
+        title: "Payment verification failed",
+        description:
+          err instanceof Error
+            ? err.message
+            : "If you were charged, your plan will activate automatically within a few minutes.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startCheckout = async (plan: PlanInfo) => {
+    if (checkoutPlan) return;
+    setCheckoutPlan(plan.id);
+    try {
+      const info = await createCheckout(plan.id);
+      await openRazorpayCheckout({
+        keyId: info.keyId,
+        subscriptionId: info.subscriptionId,
+        planName: plan.name,
+        userName: user?.fullName,
+        userEmail: user?.email,
+        onSuccess: (response) => {
+          setCheckoutPlan(null);
+          verifyMutation.mutate(response);
+        },
+        onDismiss: () => setCheckoutPlan(null),
+      });
+    } catch (err) {
+      setCheckoutPlan(null);
+      toast({
+        title: "Couldn't start checkout",
+        description: err instanceof Error ? err.message : "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const cancelMutation = useMutation({
+    mutationFn: cancelSubscription,
+    onSuccess: async () => {
+      await afterPlanChange();
+      toast({
+        title: "Downgrade scheduled",
+        description:
+          "Your subscription is cancelled. You keep your current plan until the end of the billing period, then move to Free.",
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: "Cancellation failed",
         description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       });
     },
   });
+
+  const paymentsConfigured = billing?.paymentsConfigured ?? true;
+  const onPaidPlan = user?.plan !== "FREE";
+  const cancelScheduled = billing?.subscriptionStatus === "cancel_scheduled";
 
   const meters = usage
     ? [
@@ -72,9 +140,16 @@ export default function BillingPage() {
       <div>
         <h2 className="text-2xl font-bold">Usage & Billing</h2>
         <p className="text-muted-foreground text-sm mt-1">
-          Track this month's consumption and manage your plan.
+          Track this month's consumption and manage your subscription.
         </p>
       </div>
+
+      {!paymentsConfigured && (
+        <Card className="p-4 border-warning/40 bg-warning/5 text-sm">
+          Payments aren't configured on this environment yet — upgrades are disabled until the
+          Razorpay keys are set.
+        </Card>
+      )}
 
       <Card className="p-6 bg-card/60 border-border/50">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -87,7 +162,18 @@ export default function BillingPage() {
                   Free forever
                 </Badge>
               )}
+              {cancelScheduled && (
+                <Badge variant="outline" className="border-warning/40 text-warning">
+                  Cancels at period end
+                </Badge>
+              )}
             </div>
+            {onPaidPlan && billing?.subscriptionId && (
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                Subscription {billing.subscriptionId}
+                {billing.subscriptionStatus ? ` · ${billing.subscriptionStatus}` : ""}
+              </p>
+            )}
           </div>
           <div className="text-right text-sm text-muted-foreground">
             <p>Max file size: {usage ? formatBytes(usage.maxFileSizeBytes) : "—"}</p>
@@ -132,6 +218,8 @@ export default function BillingPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PLANS.map((plan) => {
             const isCurrent = user?.plan === plan.id;
+            const isFreeTier = plan.id === "FREE";
+            const busy = checkoutPlan === plan.id || verifyMutation.isPending;
             return (
               <Card
                 key={plan.id}
@@ -155,42 +243,61 @@ export default function BillingPage() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  variant={isCurrent ? "secondary" : "default"}
-                  disabled={isCurrent || planMutation.isPending}
-                  onClick={() => setPendingPlan(plan)}
-                >
-                  {isCurrent ? "Current plan" : `Switch to ${plan.name}`}
-                </Button>
+
+                {isCurrent ? (
+                  <Button variant="secondary" disabled>
+                    Current plan
+                  </Button>
+                ) : isFreeTier ? (
+                  <Button
+                    variant="outline"
+                    disabled={!onPaidPlan || cancelScheduled || cancelMutation.isPending}
+                    onClick={() => setConfirmCancel(true)}
+                  >
+                    {cancelScheduled ? "Downgrade scheduled" : "Downgrade to Free"}
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={!paymentsConfigured || busy}
+                    onClick={() => startCheckout(plan)}
+                  >
+                    {busy ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening checkout…
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" /> Upgrade to {plan.name}
+                      </>
+                    )}
+                  </Button>
+                )}
               </Card>
             );
           })}
         </div>
         <p className="text-xs text-muted-foreground mt-4">
-          Card payments are coming soon — plan changes apply immediately and paid tiers are billed
-          at the end of the month.
+          Subscriptions are billed monthly through Razorpay. Upgrades apply as soon as payment is
+          confirmed; downgrades take effect at the end of the current billing period.
         </p>
       </div>
 
-      <AlertDialog open={!!pendingPlan} onOpenChange={(open) => !open && setPendingPlan(null)}>
+      <AlertDialog open={confirmCancel} onOpenChange={setConfirmCancel}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Switch to the {pendingPlan?.name} plan?</AlertDialogTitle>
+            <AlertDialogTitle>Cancel your subscription?</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingPlan?.priceMonthly === 0
-                ? "You'll move to the Free tier immediately. Videos over the Free limits stay stored, but new uploads follow Free quotas."
-                : `You'll be billed $${pendingPlan?.priceMonthly}/month. New quotas apply immediately.`}
+              You'll keep your current plan until the end of the billing period, then move to the
+              Free tier. Existing videos stay stored, but new uploads follow Free quotas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Keep my plan</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (pendingPlan) planMutation.mutate(pendingPlan.id);
-                setPendingPlan(null);
-              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => cancelMutation.mutate()}
             >
-              Confirm switch
+              Cancel subscription
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -223,12 +223,54 @@ export async function revokeApiKey(id: number): Promise<void> {
   if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to revoke API key"));
 }
 
-export async function changePlan(plan: string): Promise<AuthUser> {
-  const res = await authFetch("/api/account/plan", {
+// ---------------------------------------------------------------------------
+// Billing (Razorpay)
+// ---------------------------------------------------------------------------
+
+export interface BillingStatus {
+  plan: string;
+  subscriptionId: string | null;
+  subscriptionStatus: string | null;
+  paymentsConfigured: boolean;
+}
+
+export interface CheckoutInfo {
+  subscriptionId: string;
+  keyId: string;
+  plan: string;
+}
+
+export async function getBillingStatus(): Promise<BillingStatus> {
+  const res = await authFetch("/api/billing/status");
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to load billing status"));
+  return res.json();
+}
+
+export async function createCheckout(plan: string): Promise<CheckoutInfo> {
+  const res = await authFetch("/api/billing/checkout", {
     method: "POST",
     body: JSON.stringify({ plan }),
   });
-  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to change plan"));
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to start checkout"));
+  return res.json();
+}
+
+export async function verifyPayment(payload: {
+  razorpayPaymentId: string;
+  razorpaySubscriptionId: string;
+  razorpaySignature: string;
+}): Promise<BillingStatus> {
+  const res = await authFetch("/api/billing/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Payment verification failed"));
+  return res.json();
+}
+
+export async function cancelSubscription(): Promise<BillingStatus> {
+  const res = await authFetch("/api/billing/cancel", { method: "POST" });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Failed to cancel subscription"));
   return res.json();
 }
 
