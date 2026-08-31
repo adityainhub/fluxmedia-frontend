@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { forgotPassword } from "@/lib/api";
+import { forgotPassword, isRateLimited } from "@/lib/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -24,7 +24,7 @@ const ForgotPassword = () => {
       setSent(true);
     } catch (err) {
       toast({
-        title: "Request failed",
+        title: isRateLimited(err) ? "Too many attempts" : "Request failed",
         description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       });

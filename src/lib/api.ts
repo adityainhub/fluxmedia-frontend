@@ -41,6 +41,11 @@ export class ApiError extends Error {
   }
 }
 
+/** True when the backend's auth rate limiter rejected the request. */
+export function isRateLimited(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 429;
+}
+
 /** Fetch wrapper that attaches the JWT and surfaces backend error messages. */
 async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);

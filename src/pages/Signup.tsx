@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { isRateLimited } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 
 const perks = [
@@ -42,7 +43,7 @@ const Signup = () => {
       navigate("/console", { replace: true });
     } catch (err) {
       toast({
-        title: "Sign up failed",
+        title: isRateLimited(err) ? "Too many attempts" : "Sign up failed",
         description: err instanceof Error ? err.message : "Please try again",
         variant: "destructive",
       });
