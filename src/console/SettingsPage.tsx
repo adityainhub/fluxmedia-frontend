@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, KeyRound, Plus, Trash2 } from "lucide-react";
+import { BadgeCheck, Copy, KeyRound, MailWarning, Plus, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ApiKeyInfo, createApiKey, listApiKeys, revokeApiKey } from "@/lib/api";
+import { ApiKeyInfo, createApiKey, listApiKeys, resendVerification, revokeApiKey } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/context/AuthContext";
 
@@ -46,6 +46,21 @@ export default function SettingsPage() {
         variant: "destructive",
       });
     },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: resendVerification,
+    onSuccess: () =>
+      toast({
+        title: "Verification email sent",
+        description: `Check ${user?.email} for the link.`,
+      }),
+    onError: (err) =>
+      toast({
+        title: "Couldn't send the email",
+        description: err instanceof Error ? err.message : "Please try again later",
+        variant: "destructive",
+      }),
   });
 
   const revokeMutation = useMutation({
@@ -93,6 +108,32 @@ export default function SettingsPage() {
             <Input value={user?.email ?? ""} disabled />
           </div>
         </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-border/50 px-4 py-3">
+          {user?.emailVerified ? (
+            <>
+              <BadgeCheck className="h-4 w-4 text-success shrink-0" />
+              <p className="text-sm flex-1">Email verified</p>
+            </>
+          ) : (
+            <>
+              <MailWarning className="h-4 w-4 text-warning shrink-0" />
+              <p className="text-sm flex-1 min-w-[180px]">
+                Email not verified yet
+                <span className="text-muted-foreground"> — check your inbox for the link.</span>
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={resendMutation.isPending}
+                onClick={() => resendMutation.mutate()}
+              >
+                {resendMutation.isPending ? "Sending…" : "Resend email"}
+              </Button>
+            </>
+          )}
+        </div>
+
         <p className="text-xs text-muted-foreground mt-3">
           Contact support to change your email address.
         </p>

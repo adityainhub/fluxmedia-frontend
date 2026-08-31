@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
+import { VerifyEmailBanner } from "./VerifyEmailBanner";
 
 const mainNav = [
   { title: "Dashboard", url: "/console", icon: LayoutDashboard, exact: true },
@@ -210,6 +211,8 @@ export default function ConsoleLayout() {
             </Link>
           </div>
         </header>
+
+        <VerifyEmailBanner />
 
         <main className="flex-1 p-4 md:p-6 lg:p-8">
           <Outlet />

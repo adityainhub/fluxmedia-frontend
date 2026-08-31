@@ -129,6 +129,7 @@ export interface AuthUser {
   email: string;
   fullName: string;
   plan: "FREE" | "CREATOR" | "SCALE";
+  emailVerified: boolean;
 }
 
 export interface AuthResponse {
@@ -190,6 +191,37 @@ export async function login(email: string, password: string): Promise<AuthRespon
 export async function getMe(): Promise<AuthUser> {
   const res = await authFetch("/api/auth/me");
   if (!res.ok) throw new ApiError(res.status, "Not signed in");
+  return res.json();
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+  const res = await authFetch("/api/auth/verify-email", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Verification failed"));
+}
+
+export async function resendVerification(): Promise<void> {
+  const res = await authFetch("/api/auth/resend-verification", { method: "POST" });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Couldn't send the email"));
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  const res = await authFetch("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Request failed"));
+}
+
+/** Consumes the emailed reset token; returns a fresh signed-in session. */
+export async function resetPassword(token: string, newPassword: string): Promise<AuthResponse> {
+  const res = await authFetch("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ token, newPassword }),
+  });
+  if (!res.ok) throw new ApiError(res.status, await readError(res, "Reset failed"));
   return res.json();
 }
 
