@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Send } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, MessageSquare, Phone, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/lib/api";
+import { LEGAL } from "@/lib/legal";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -191,25 +193,70 @@ const Contact = () => {
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <MessageSquare className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Support</h3>
+                <div className="min-w-0">
+                  <h3 className="font-semibold mb-1">Email</h3>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Technical assistance
+                    Support and billing questions
                   </p>
                   <a
-                    href="mailto:support@fluxmedia.com"
-                    className="text-sm text-primary hover:underline"
+                    href={`mailto:${LEGAL.supportEmail}`}
+                    className="text-sm text-primary hover:underline break-all"
                   >
-                    support@fluxmedia.in
+                    {LEGAL.supportEmail}
                   </a>
                 </div>
               </div>
             </Card>
 
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Phone className="h-6 w-6 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold mb-1">Phone</h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {LEGAL.supportHours}
+                  </p>
+                  <a
+                    href={`tel:${LEGAL.phoneHref}`}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    {LEGAL.phoneDisplay}
+                  </a>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 bg-card/50 backdrop-blur-sm border-border/50">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="h-6 w-6 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-semibold mb-1">Registered address</h3>
+                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                    {LEGAL.legalEntityName}
+                    {"\n"}
+                    {LEGAL.address}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
             <Card className="p-6 bg-gradient-to-br from-primary/10 to-transparent backdrop-blur-sm border-border/50">
-              <h3 className="font-semibold mb-2">Response Time</h3>
-              <p className="text-sm text-muted-foreground">
-                We typically respond within 24 hours during business days. For urgent technical issues, please mention "URGENT" in your subject line.
+              <h3 className="font-semibold mb-2">Response time</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                We aim to reply within 1 business day, and within 2 at the latest. Paid
+                plans are answered first. For anything urgent, put "URGENT" in the subject
+                line or call during business hours.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Billing or cancellation query? See the{" "}
+                <Link to="/refund-policy" className="text-primary hover:underline">
+                  Refund &amp; Cancellation Policy
+                </Link>
+                .
               </p>
             </Card>
           </motion.div>

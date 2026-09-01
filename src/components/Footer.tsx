@@ -1,18 +1,19 @@
 import { Link } from "react-router-dom";
+import { LEGAL } from "@/lib/legal";
 import { Mail, Github, Twitter, Linkedin } from "lucide-react";
 
 const socialLinks = [
   { icon: Github, href: "https://github.com/adityainhub", label: "GitHub" },
   { icon: Linkedin, href: "https://linkedin.com/in/aditya1502", label: "LinkedIn" },
   { icon: Twitter, href: "https://twitter.com/k07aditya", label: "Twitter" },
-  { icon: Mail, href: "mailto:hello@fluxmedia.com", label: "Email" },
+  { icon: Mail, href: `mailto:${LEGAL.supportEmail}`, label: "Email" },
 ];
 
 export const Footer = () => {
   return (
     <footer className="border-t border-border/60 bg-card/20 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -91,10 +92,32 @@ export const Footer = () => {
             </ul>
           </div>
 
+          {/* Legal */}
+          <div>
+            <h3 className="font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Terms &amp; Conditions
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/refund-policy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Refund &amp; Cancellation
+                </Link>
+              </li>
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
             <h3 className="font-semibold mb-4">Connect</h3>
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-4">
               {socialLinks.map((link) => (
                 <a
                   key={link.label}
@@ -108,11 +131,27 @@ export const Footer = () => {
                 </a>
               ))}
             </div>
+            <address className="not-italic space-y-1 text-sm text-muted-foreground">
+              <a
+                href={`mailto:${LEGAL.supportEmail}`}
+                className="block hover:text-primary transition-colors break-all"
+              >
+                {LEGAL.supportEmail}
+              </a>
+              <a
+                href={`tel:${LEGAL.phoneHref}`}
+                className="block hover:text-primary transition-colors"
+              >
+                {LEGAL.phoneDisplay}
+              </a>
+            </address>
           </div>
         </div>
 
         <div className="mt-10 pt-8 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} fluxmedia. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} {LEGAL.legalEntityName}. All rights reserved.
+          </p>
           <p className="text-xs font-mono text-muted-foreground/70">
             Spring Boot · AWS Lambda · SQS · ECS Fargate · FFmpeg · HLS
           </p>

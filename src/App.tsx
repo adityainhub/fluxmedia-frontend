@@ -26,6 +26,9 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const Watch = lazy(() => import("./pages/Watch"));
 const Embed = lazy(() => import("./pages/Embed"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const ConsoleLayout = lazy(() => import("./console/ConsoleLayout"));
@@ -67,6 +70,9 @@ const App = () => (
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
               </Route>
 
               {/* Legacy public upload URL now lives in the console */}

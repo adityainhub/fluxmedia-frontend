@@ -132,6 +132,16 @@ const Signup = () => {
               )}
             </Button>
           </form>
+
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground">
+              By creating an account, you agree to our{" "}
+              <Link to="/terms" className="text-primary hover:underline">Terms &amp; Conditions</Link>,{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>{" "}
+              and{" "}
+              <Link to="/refund-policy" className="text-primary hover:underline">Refund Policy</Link>.
+            </p>
+          </div>
         </Card>
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
