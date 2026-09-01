@@ -47,8 +47,13 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/upload" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  Upload a video
+                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/console" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  Console
                 </Link>
               </li>
               <li>

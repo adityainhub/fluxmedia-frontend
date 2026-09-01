@@ -1,50 +1,60 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Video, Layers, Cloud, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Code2, LayoutDashboard, Share2, Video } from "lucide-react";
 
+// Every claim below maps to shipped behaviour. If a capability isn't built yet,
+// it doesn't belong on this page — see the About page for what's still coming.
 const services = [
   {
     icon: Video,
-    title: "Multi-Resolution Transcoding",
-    description: "Convert your videos into 1080p, 720p, 480p, and 360p formats automatically. Each resolution is optimized for quality and file size.",
+    title: "Adaptive HLS transcoding",
+    description:
+      "Upload any format FFmpeg can read. Every video comes back as an HLS stream with a full quality ladder, so playback adapts to whatever connection your viewer is on.",
     features: [
-      "Adaptive bitrate encoding",
-      "H.264 and H.265 codec support",
-      "Custom resolution presets",
-      "Automatic quality optimization",
+      "1440p, 1080p, 720p, 480p and 360p renditions",
+      "H.264 video with AAC audio, ~10s segments",
+      "Master playlist generated per video",
+      "Never upscales — small sources skip the higher rungs",
+      "Automatic thumbnail extraction",
     ],
   },
   {
-    icon: Layers,
-    title: "HLS Packaging",
-    description: "Package your transcoded videos into HTTP Live Streaming (HLS) format for seamless adaptive streaming across all devices and platforms.",
+    icon: LayoutDashboard,
+    title: "A console for your library",
+    description:
+      "Track every upload from queue to ready, watch renditions back in the browser, and see exactly where you stand against your plan.",
     features: [
-      "Multiple bitrate variants",
-      "Master playlist generation",
-      "Segment optimization",
-      "DRM support available",
+      "Live status as jobs move through the pipeline",
+      "Built-in player with manual quality switching",
+      "Usage and storage meters against your plan",
+      "Signed download links for every rendition",
+      "Delete a video and its renditions in one action",
     ],
   },
   {
-    icon: Cloud,
-    title: "Cloud Processing",
-    description: "Leverage our distributed cloud infrastructure for fast, reliable processing. No local rendering required - upload and let us handle the rest.",
+    icon: Share2,
+    title: "Sharing and embeds",
+    description:
+      "Turn any processed video into a public link or drop it into your own site with an iframe. Sharing is off by default and revocable the moment you change your mind.",
     features: [
-      "Parallel processing",
-      "Auto-scaling infrastructure",
-      "Global edge locations",
-      "99.9% uptime SLA",
+      "Public watch links with an unguessable token",
+      "Copy-paste iframe embed snippet",
+      "Revoke access instantly — old links stop working",
+      "Private by default; you opt in per video",
     ],
   },
   {
-    icon: Settings,
-    title: "Advanced Controls",
-    description: "Fine-tune your transcoding with advanced parameters. Custom bitrates, frame rates, codec settings, and more for power users.",
+    icon: Code2,
+    title: "Developer API",
+    description:
+      "Drive the same pipeline from your own backend. Files upload straight from your users' browsers to storage, so your servers never touch the bytes.",
     features: [
-      "Custom encoding parameters",
-      "Watermarking options",
-      "Thumbnail generation",
-      "Webhook notifications",
+      "API keys via the X-Api-Key header",
+      "Presigned direct-to-storage uploads",
+      "REST endpoints for status and playback URLs",
+      "Included on Creator and Scale plans",
     ],
   },
 ];
@@ -62,13 +72,14 @@ const Services = () => {
           className="text-center mb-16"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm mb-6">
-            <span className="text-sm font-medium text-foreground">Our Services</span>
+            <span className="text-sm font-medium text-foreground">What you get</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Professional Video Transcoding Solutions
+            Upload a video. Get a stream.
           </h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            We design, develop, and implement transcoding tools that help you deliver video content efficiently and reliably
+            fluxmedia handles transcoding, packaging, storage and delivery, so you can
+            ship video without building an encoding pipeline first.
           </p>
         </motion.div>
 
@@ -76,7 +87,7 @@ const Services = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
           {services.map((service, index) => (
             <motion.div
-              key={index}
+              key={service.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -94,9 +105,9 @@ const Services = () => {
                 <p className="text-muted-foreground mb-6">{service.description}</p>
 
                 <ul className="space-y-2">
-                  {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-2 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  {service.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                       <span className="text-muted-foreground">{feature}</span>
                     </li>
                   ))}
@@ -112,69 +123,74 @@ const Services = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="bg-card/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-border/50"
+          className="bg-card/30 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-border/50 mb-16"
         >
           <h2 className="text-3xl font-bold text-center mb-12">Before vs After</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-destructive">Without fluxmedia</h3>
               <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-destructive text-xs">✕</span>
-                  </div>
-                  <span className="text-muted-foreground">Single large video file</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-destructive text-xs">✕</span>
-                  </div>
-                  <span className="text-muted-foreground">Slow loading on poor connections</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-destructive text-xs">✕</span>
-                  </div>
-                  <span className="text-muted-foreground">No quality adaptation</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-destructive text-xs">✕</span>
-                  </div>
-                  <span className="text-muted-foreground">Manual processing required</span>
-                </li>
+                {[
+                  "One large file served to every viewer",
+                  "Buffering on slower connections",
+                  "No quality adaptation mid-playback",
+                  "You run and babysit the encoding servers",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-destructive text-xs">✕</span>
+                    </div>
+                    <span className="text-muted-foreground">{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
 
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-primary">With fluxmedia</h3>
               <ul className="space-y-3">
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-primary text-xs">✓</span>
-                  </div>
-                  <span className="text-muted-foreground">Multiple optimized quality levels</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-primary text-xs">✓</span>
-                  </div>
-                  <span className="text-muted-foreground">Instant playback on any connection</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-primary text-xs">✓</span>
-                  </div>
-                  <span className="text-muted-foreground">Adaptive bitrate streaming</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-primary text-xs">✓</span>
-                  </div>
-                  <span className="text-muted-foreground">Fully automated cloud processing</span>
-                </li>
+                {[
+                  "Up to five renditions per video, picked automatically",
+                  "Playback starts fast on any connection",
+                  "Adaptive bitrate switching built in",
+                  "Fully managed — upload and you're done",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-primary text-xs">✓</span>
+                    </div>
+                    <span className="text-muted-foreground">{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
+          </div>
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">Start on the free plan</h2>
+          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+            Ten videos a month, the full quality ladder, no card required.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link to="/signup">
+              <Button size="lg" className="group">
+                Create free account
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button size="lg" variant="outline">
+                Compare plans
+              </Button>
+            </Link>
           </div>
         </motion.div>
       </div>
