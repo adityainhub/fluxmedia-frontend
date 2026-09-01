@@ -11,22 +11,27 @@ const faqs = [
   {
     question: "How long does transcoding take?",
     answer:
-      "It depends on source length and resolution. Each job runs on its own ARM64 Fargate task, with up to 5 running concurrently — extra uploads queue in SQS and start as capacity frees up.",
+      "It depends on source length and resolution. Each job runs on its own ARM64 Fargate task, with up to 5 running concurrently — extra uploads queue in SQS and start as capacity frees up. The console shows live status, so you can close the tab and come back.",
+  },
+  {
+    question: "What does it cost?",
+    answer:
+      "The free plan covers 10 videos a month with 2 GB of storage and needs no card. Creator and Scale raise the monthly limit, file size cap and storage. Every plan runs the same pipeline and the same quality ladder — paying only changes the limits.",
+  },
+  {
+    question: "Can I share videos or embed them on my own site?",
+    answer:
+      "Yes. Any processed video can be given a public watch link or an iframe embed snippet from the console. Sharing is off by default, and switching it off revokes the link immediately.",
+  },
+  {
+    question: "Is there an API?",
+    answer:
+      "Yes, on the Creator and Scale plans. You create an API key in the console and authenticate with the X-Api-Key header. Uploads are presigned and go straight from the browser to storage, so your own servers never handle the video bytes.",
   },
   {
     question: "What happens to my raw upload after processing?",
     answer:
-      "Once the HLS variants are confirmed and saved, the original raw file is deleted from S3. Only the transcoded output remains, served through short-lived signed URLs.",
-  },
-  {
-    question: "Is fluxmedia a hosted commercial product?",
-    answer:
-      "Not yet — it's an actively developed learning project exploring how real transcoding pipelines are built end to end. The architecture on this page is the pipeline that actually runs. Read more on the About page.",
-  },
-  {
-    question: "Can I self-host or reuse the pipeline?",
-    answer:
-      "The design is intentionally boring and portable: presigned S3 uploads, SQS for backpressure, Lambda for orchestration, Fargate for the heavy lifting. Nothing here is proprietary infrastructure.",
+      "Once the HLS variants are confirmed and saved, the original raw file is deleted from S3. Only the transcoded output remains, served through short-lived signed URLs that are scoped per video.",
   },
 ];
 
